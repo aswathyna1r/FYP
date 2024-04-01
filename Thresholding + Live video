@@ -1,0 +1,53 @@
+import cv2
+import numpy as np
+import time
+
+# Setup SimpleBlobDetector parameters.
+params = cv2.SimpleBlobDetector_Params()
+params.minThreshold = 10
+params.maxThreshold = 200
+params.filterByArea = True
+params.minArea = 1500
+params.filterByCircularity = True
+params.minCircularity = 0.1
+params.filterByConvexity = True
+params.minConvexity = 0.87
+params.filterByInertia = True
+params.minInertiaRatio = 0.01
+
+# Create a detector with the parameters
+detector = cv2.SimpleBlobDetector_create(params)
+
+# Start video capture
+cap = cv2.VideoCapture(0)
+time.sleep(2)  # Wait for camera to initialize
+
+while True:
+    ret, frame = cap.read()
+    if ret:
+        # Convert the frame to grayscale
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Apply thresholding to the grayscale image
+        ret, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+
+        # Detect blobs on the thresholded image instead of the grayscale image
+        keypoints = detector.detect(thresh)
+
+        # Draw detected blobs as red circles on the original frame
+        im_with_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255),
+                                              cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+        # Show the frame with the detected blobs
+        cv2.imshow("Blob Detection", im_with_keypoints)
+
+        # Show the thresholded image
+        cv2.imshow('Binary Threshold', thresh)
+
+        # Break the loop when 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+# When everything is done, release the capture
+cap.release()
+cv2.destroyAllWindows()
