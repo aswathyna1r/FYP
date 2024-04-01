@@ -1,0 +1,67 @@
+#Blob/stain Detection
+# 1)Thresholding : source images -> binary images
+# 2)Grouping : In each binary image (b&w),  connected white pixels are grouped. binary blobs.
+# 3)Merging  : The centers of the binary blobs in the binary images are computed, and blobs located closer than minDistBetweenBlobs are merged.
+# 4)Center & Radius Calculation:  The centers and radii of the newly merged blobs are computed and returned.
+
+# Filtering Blobs by Color, Size, and Shape
+# 1. a)color - filterByColor = 1. blobColor = 0 (darker blobs), blobColor = 255 (lighter)
+# b)size -  filterByArea = 1, set minArea  and maxArea, minArea = 100 will filter out all the blobs that have less then 100 pixels
+# c)shape
+# 2. Circularity : circle has a circularity of 1, the circularity of a square is 0.785,
+# 3. Convexity : convex hull boundary, convex hull shape (draw circle exg) - set filterByConvexity = 1, followed by setting 0 ≤ minConvexity ≤ 1and maxConvexity ( ≤ 1)
+# 4. Inertia Ratio : measures how elongated a shape is - filterByInertia = 1, and set 0 ≤ minInertiaRatio ≤ 1and maxInertiaRatio (≤ 1 )
+# Setup SimpleBlobDetector parameters.
+
+# Standard imports
+import cv2
+import numpy as np;
+ 
+# Read image
+im = cv2.imread("blob.jpg", cv2.IMREAD_GRAYSCALE)
+ 
+# Set up the detector with default parameters.
+detector = cv2.SimpleBlobDetector_create()
+#error : before it was without create, with create it works
+#imppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
+ 
+# Detect blobs.
+keypoints = detector.detect(im)
+ 
+# Draw detected blobs as red circles.
+# cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
+im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+ 
+# Show keypoints
+cv2.imshow("Keypoints", im_with_keypoints)
+cv2.waitKey(0)
+
+
+params = cv2.SimpleBlobDetector_Params()
+ 
+# Change thresholds
+params.minThreshold = 10;
+params.maxThreshold = 200;
+ 
+# Filter by Area.
+params.filterByArea = True
+params.minArea = 1500
+ 
+# Filter by Circularity
+params.filterByCircularity = True
+params.minCircularity = 0.1
+ 
+# Filter by Convexity
+params.filterByConvexity = True
+params.minConvexity = 0.87
+ 
+# Filter by Inertia
+params.filterByInertia = True
+params.minInertiaRatio = 0.01
+ 
+# Create a detector with the parameters
+ver = (cv2.__version__).split('.')
+if int(ver[0]) < 3 :
+  detector = cv2.SimpleBlobDetector(params)
+else :
+  detector = cv2.SimpleBlobDetector_create(params)
