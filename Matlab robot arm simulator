@@ -1,0 +1,65 @@
+% Parameters
+L1 = 1;              % Length of the first arm segment (meters)
+L2 = 1;              % Length of the second arm segment (meters)
+dt = 0.05;           % Time step (seconds)
+
+% Movement parameters
+theta1_start = 0;    % Initial angle for the lower arm
+theta1_end = pi/4;   % Final angle for the lower arm
+theta2_low = 0.5;    % Lower oscillation angle for the upper arm
+theta2_high = 1.5;   % Higher oscillation angle for the upper arm
+t_move = 1.5;        % Time to move the lower arm forward and back
+t_oscillate = 3;     % Time for one full oscillation back and forth
+num_cycles = 2;      % Number of full sequences
+
+% Time vector for one full sequence
+t_sequence = [linspace(0, t_move, t_move/dt), ...                % Move forward
+              repmat([linspace(theta2_low, theta2_high, t_oscillate/(2*dt)), ...  % Oscillate
+                     linspace(theta2_high, theta2_low, t_oscillate/(2*dt))], 1, 3), ...
+              linspace(t_move, 0, t_move/dt)];                   % Move back
+
+% Repeat the sequence twice
+t_full = repmat(t_sequence, 1, num_cycles);
+
+% Initialize angles
+theta1 = [linspace(theta1_start, theta1_end, t_move/dt), ...     % Move forward
+          repmat(theta1_end, 1, length(t_sequence) - 2*t_move/dt), ...  % Hold position during oscillation
+          linspace(theta1_end, theta1_start, t_move/dt)];        % Move back
+
+theta1 = repmat(theta1, 1, num_cycles);  % Repeat for the full cycles
+
+theta2 = [zeros(1, t_move/dt), ...  % Lower arm is moving, upper arm stays
+          t_full(t_move/dt+1:end-t_move/dt), ...  % Oscillation sequence
+          zeros(1, t_move/dt)];  % Lower arm returns, upper arm stays
+
+% Preallocate position arrays for joints and endpoint
+x1 = zeros(size(t_full));
+y1 = zeros(size(t_full));
+x2 = zeros(size(t_full));
+y2 = zeros(size(t_full));
+% Calculate the positions in a loop
+for i = 1:length(t_full)
+    % First joint endpoint positions
+    x1(i) = L1 * cos(theta1(i));
+    y1(i) = L1 * sin(theta1(i));
+
+    % Second joint endpoint positions
+    x2(i) = x1(i) + L2 * cos(theta1(i) + theta2(i));
+    y2(i) = y1(i) + L2 * sin(theta1(i) + theta2(i));
+    
+    % Plotting the arm
+    plot([0, x1(i)], [0, y1(i)], 'b-', 'LineWidth', 4); % Arm segment 1
+    hold on;
+    plot([x1(i), x2(i)], [y1(i), y2(i)], 'b-', 'LineWidth', 4); % Arm segment 2
+    plot(x1(i), y1(i), 'ro', 'MarkerFaceColor', 'm', 'MarkerSize', 10); % First joint (purple)
+    plot(x2(i), y2(i), 'ro', 'MarkerFaceColor', 'b', 'MarkerSize', 10); % Second joint (blue)
+    axis equal;
+    xlim([-2, 2]);
+    ylim([-1, 2]);
+    xlabel('X position (m)');
+    ylabel('Y position (m)');
+    title(sprintf('Time: %.2f s', t_full(i)));
+    hold off;
+    
+    pause(0.05); % Pause to visualize the movement
+end
