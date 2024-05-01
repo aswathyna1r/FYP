@@ -1,0 +1,26 @@
+% System parameters
+Kp = 2.0;   % Proportional gain
+Ki = 0.1;   % Integral gain
+Kd = 0.5;   % Derivative gain
+
+% Create the PID controller
+C = pid(Kp, Ki, Kd);
+
+% Define the system to be controlled (e.g., a simple motor with transfer function)
+P_motor = tf(1, [1, 10, 20]);
+
+% Closed-loop system with PID controller
+T = feedback(C*P_motor, 1);
+
+% Step response of the closed-loop system
+figure;
+step(T);
+title('Step Response with PID Controller');
+
+% Show how the response changes with a different set of PID parameters
+C_new = pid(1.5, 0.05, 0.75);
+T_new = feedback(C_new*P_motor, 1);
+
+figure;
+step(T_new);
+title('Step Response with Modified PID Controller');
